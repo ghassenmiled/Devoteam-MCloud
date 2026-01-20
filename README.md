@@ -59,7 +59,7 @@ flowchart TD
   COOLDOWN -- "No" --> SWITCH["7) Toggle active_target\nfailover_count++\nlock_until_utc = now + cooldown\nlast_status=FAILOVER_DONE"]
   SWITCH -->|8) Write state| TBL
   DF --> END["Stop (run finished)"]
-
+```
 ---
 
 ## Azure Resources Used
