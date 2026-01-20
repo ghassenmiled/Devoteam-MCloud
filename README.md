@@ -21,31 +21,44 @@ It continuously checks the health of an active endpoint and automatically switch
 
 ```mermaid
 flowchart TD
-  subgraph Azure
-    LA[Logic App\nRecurrence Trigger]
-    FA[Function App\nPython]
-    ST[Storage Account]
-    TBL[Table Storage\nfailover_state]
+  %% =========================
+  %% AZURE RESOURCES (MINIMAL)
+  %% =========================
+  subgraph AZ["Azure (minimal resources)"]
+    LA["Logic App (Consumption)\nTrigger: Recurrence (ex: every 1 min)"]
+    FA["Function App (Python)"]
+    ST["Storage Account"]
+    TBL["Table Storage: failover_state\nEntity: PK=failover, RK=state"]
   end
 
-  subgraph Functions
-    HC[health_check\nHTTP GET]
-    DF[do_failover\nHTTP POST]
+  %% =========================
+  %% FUNCTIONS
+  %% =========================
+  subgraph FN["Azure Functions (HTTP)"]
+    HC["Function: health_check (GET)\nauthLevel=function\nURL: /api/health_check?code=KEY_HEALTH"]
+    DF["Function: do_failover (POST)\nauthLevel=function\nURL: /api/do_failover?code=KEY_FAILOVER"]
   end
 
-  LA -->|GET| HC
-  HC -->|Read/Write| TBL
-  HC -->|Check active endpoint| EP[Active Endpoint]
+  %% =========================
+  %% ORCHESTRATION FLOW
+  %% =========================
+  LA -->|1) HTTP GET health_check| HC
+  HC -->|2) Read + Update state| TBL
+  HC -->|3) Check endpoint based on active_target| EP["Active endpoint\n(primary_endpoint or secondary_endpoint)"]
+  EP -->|HTTP GET /health| RES["HTTP response / timeout"]
+  RES -->|4) last_status,last_reason,last_check_utc| TBL
+  HC -->|Return {healthy, reason}| LA
 
-  LA --> DEC{healthy == false}
-  DEC -- Yes -->|POST| DF
-  DF -->|Read/Write| TBL
-  DEC -- No --> END[Stop]
+  LA --> DEC{"healthy == false ?"}
+  DEC -- "No" --> ENDOK["Stop (no failover)"]
+  DEC -- "Yes" -->|5) HTTP POST do_failover| DF
 
-  ST --> TBL
-  FA --> HC
-  FA --> DF
-```
+  DF -->|6) Read state| TBL
+  DF --> COOLDOWN{"now < lock_until_utc ?"}
+  COOLDOWN -- "Yes" --> SKIP["Return: changed=false\nstatus=FAILOVER_SKIPPED (cooldown)"]
+  COOLDOWN -- "No" --> SWITCH["7) Toggle active_target\nfailover_count++\nlock_until_utc = now + cooldown\nlast_status=FAILOVER_DONE"]
+  SWITCH -->|8) Write state| TBL
+  DF --> END["Stop (run finished)"]
 
 ---
 
