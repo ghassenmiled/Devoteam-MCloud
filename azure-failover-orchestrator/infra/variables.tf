@@ -1,3 +1,8 @@
+variable "subscription_id" {
+  type        = string
+  description = "Azure subscription id used by Terraform."
+}
+
 variable "resource_group_name" {
   type = string
 }

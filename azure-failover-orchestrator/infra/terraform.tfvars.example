@@ -1,3 +1,5 @@
+subscription_id = "<PASTE_THE_ID_FROM_AZ_ACCOUNT_SHOW>"
+
 # === Required ===
 resource_group_name  = "rg-devoteam-tribe-failover-demo"
 location             = "westeurope"
