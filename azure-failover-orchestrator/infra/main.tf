@@ -3,7 +3,7 @@ provider "azurerm" {
 }
 
 locals {
-  table_name = "failoverstate" # ✅ no underscore
+  table_name        = "failoverstate" # ✅ no underscore
   function_base_url = "https://${azurerm_linux_function_app.func.default_hostname}/api"
 }
 
