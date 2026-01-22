@@ -11,7 +11,7 @@ if [[ -z "$RG" || -z "$SA" || -z "$PRIMARY" || -z "$SECONDARY" ]]; then
   exit 1
 fi
 
-TABLE="failover_state"
+TABLE="failoverstate"
 
 CONN_STR=$(az storage account show-connection-string   --name "$SA"   --resource-group "$RG"   --query connectionString -o tsv)
 

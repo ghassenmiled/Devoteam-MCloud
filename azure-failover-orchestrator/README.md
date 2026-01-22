@@ -36,7 +36,7 @@ flowchart TD
   LA["Logic App<br/>Timer"]
   HC["health_check<br/>Function"]
   DF["do_failover<br/>Function"]
-  TBL["Table Storage<br/>failover_state"]
+  TBL["Table Storage<br/>failoverstate"]
   EP["Active endpoint<br/>(primary or secondary)"]
 
   LA --> HC
@@ -74,7 +74,7 @@ flowchart TD
 - Persists the new state
 
 ### Table Storage
-- **Table:** `failover_state`
+- **Table:** `failoverstate`
 - **One single row only**:
   - PartitionKey = `failover`
   - RowKey = `state`
@@ -87,7 +87,7 @@ This table is the **single source of truth**.
 
 ### 1️⃣ Verify initial state
 
-In **Storage Account → Storage Browser → Tables → failover_state**, confirm:
+In **Storage Account → Storage Browser → Tables → failoverstate**, confirm:
 
 - `active_target = primary`
 - `failover_count = 0`
@@ -248,7 +248,7 @@ terraform apply
 
 This creates:
 - Resource Group
-- Storage Account + Table `failover_state`
+- Storage Account + Table `failoverstate`
 - Function App + zip deploy
 - Logic App workflow (will be updated after we inject real keys)
 
@@ -277,7 +277,7 @@ Now the Logic App calls the Functions securely using function keys.
 Terraform creates the **table**, but not the **single entity** row. Create it once.
 
 Option A — Azure Portal (Storage Browser):
-- Storage Account → Storage browser → Tables → `failover_state` → Add entity
+- Storage Account → Storage browser → Tables → `failoverstate` → Add entity
   - PartitionKey: `failover`
   - RowKey: `state`
   - Add properties:

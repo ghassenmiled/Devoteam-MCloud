@@ -2,6 +2,11 @@ provider "azurerm" {
   features {}
 }
 
+locals {
+  table_name = "failoverstate" # ✅ no underscore
+  function_base_url = "https://${azurerm_linux_function_app.func.default_hostname}/api"
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
@@ -16,7 +21,7 @@ resource "azurerm_storage_account" "sa" {
 }
 
 resource "azurerm_storage_table" "state" {
-  name                 = "failover_state"
+  name                 = local.table_name
   storage_account_name = azurerm_storage_account.sa.name
 }
 
@@ -44,29 +49,35 @@ resource "azurerm_linux_function_app" "func" {
   }
 
   app_settings = {
-    "FUNCTIONS_WORKER_RUNTIME" = "python"
-    "AzureWebJobsStorage"      = azurerm_storage_account.sa.primary_connection_string
+    FUNCTIONS_WORKER_RUNTIME = "python"
+    AzureWebJobsStorage      = azurerm_storage_account.sa.primary_connection_string
 
-    "STATE_TABLE_NAME"   = "failover_state"
-    "PRIMARY_ENDPOINT"   = var.primary_endpoint
-    "SECONDARY_ENDPOINT" = var.secondary_endpoint
-    "COOLDOWN_MINUTES"   = tostring(var.cooldown_minutes)
+    STATE_TABLE_NAME   = local.table_name
+    PRIMARY_ENDPOINT   = var.primary_endpoint
+    SECONDARY_ENDPOINT = var.secondary_endpoint
+    COOLDOWN_MINUTES   = tostring(var.cooldown_minutes)
   }
 
   zip_deploy_file = var.functions_zip_path
 }
 
-resource "azurerm_logic_app_workflow" "orchestrator" {
-  name                = "${var.function_app_name}-orchestrator"
+# ✅ Deploy Logic App via ARM template (works with azurerm v4)
+resource "azurerm_resource_group_template_deployment" "logicapp" {
+  name                = "${var.function_app_name}-logicapp-deploy"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  deployment_mode     = "Incremental"
 
-  definition = jsondecode(
-    templatefile("${path.module}/logicapp.json.tftpl", {
-      function_base_url = "https://${azurerm_linux_function_app.func.default_hostname}/api"
-      health_key        = var.health_function_key
-      failover_key      = var.failover_function_key
-      interval_minutes  = var.logicapp_interval_minutes
-    })
-  )
+  template_content = file("${path.module}/logicapp.arm.json")
+
+  parameters_content = jsonencode({
+    logicAppName = { value = "${var.function_app_name}-orchestrator" }
+    location     = { value = azurerm_resource_group.rg.location }
+
+    functionBaseUrl = { value = local.function_base_url }
+    healthKey       = { value = var.health_function_key }
+    failoverKey     = { value = var.failover_function_key }
+    intervalMinutes = { value = var.logicapp_interval_minutes }
+  })
+
+  depends_on = [azurerm_linux_function_app.func]
 }
