@@ -3,7 +3,7 @@ output "function_base_url" {
 }
 
 output "logic_app_name" {
-  value = azurerm_logic_app_workflow.orchestrator.name
+  value = "${var.function_app_name}-orchestrator"
 }
 
 output "storage_table_name" {
