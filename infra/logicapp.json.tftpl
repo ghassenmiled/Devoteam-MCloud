@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {},
+  "triggers": {
+    "EveryInterval": {
+      "type": "Recurrence",
+      "recurrence": {
+        "frequency": "Minute",
+        "interval": ${interval_minutes}
+      }
+    }
+  },
+  "actions": {
+    "HealthCheck": {
+      "type": "Http",
+      "inputs": {
+        "method": "GET",
+        "uri": "${function_base_url}/health_check?code=${health_key}"
+      }
+    },
+    "IfUnhealthy": {
+      "type": "If",
+      "runAfter": { "HealthCheck": [ "Succeeded" ] },
+      "expression": {
+        "equals": [ "@bool(body('HealthCheck')?['healthy'])", false ]
+      },
+      "actions": {
+        "DoFailover": {
+          "type": "Http",
+          "inputs": {
+            "method": "POST",
+            "uri": "${function_base_url}/do_failover?code=${failover_key}",
+            "headers": { "Content-Type": "application/json" },
+            "body": {
+              "triggered_by": "logicapp",
+              "run_id": "@workflow().run.name"
+            }
+          }
+        }
+      },
+      "else": { "actions": {} }
+    }
+  },
+  "outputs": {}
+}

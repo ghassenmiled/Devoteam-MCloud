@@ -1,0 +1,22 @@
+# === Required ===
+resource_group_name  = "rg-devoteam-tribe-failover-demo"
+location             = "westeurope"
+
+# Storage Account name must be globally unique (lowercase, 3-24 chars)
+storage_account_name = "stdevoteamfailover01"
+
+function_app_name    = "fa-devoteam-failover-demo"
+
+primary_endpoint     = "https://primary.example.com/health"
+secondary_endpoint   = "https://secondary.example.com/health"
+
+# Path to functions.zip (created by scripts/package_functions.sh)
+functions_zip_path   = "../functions.zip"
+
+# Function keys (copy from Azure Portal after first deploy)
+health_function_key  = "REPLACE_ME"
+failover_function_key= "REPLACE_ME"
+
+# === Optional ===
+cooldown_minutes     = 10
+logicapp_interval_minutes = 1
