@@ -1,0 +1,374 @@
+
+hp@DESKTOP-H93V9S0 MINGW64 ~/Documents/devoteam-mcloud/Devoteam-MCloud/azure-failover-orchestrator/infra (TEST)
+$ terraform plan
+var.failover_function_key
+  Function key for do_failover
+
+  Enter a value:
+
+var.function_app_name
+  Enter a value: functappfaile
+
+var.functions_zip_path
+  Path to functions.zip created from ./functions folder (e.g. ../functions.zip)
+
+  Enter a value: "../functions.zip"
+
+var.health_function_key
+  Function key for health_check
+
+  Enter a value:
+
+var.primary_endpoint
+  Enter a value:
+
+var.secondary_endpoint
+  Enter a value:
+
+var.storage_account_name
+  Globally unique, lowercase, 3-24 chars.
+
+  Enter a value: storageover6874
+
+var.subscription_id
+  Azure subscription id used by Terraform.
+
+  Enter a value: 6b6a9c6b-f4db-4532-a846-1fcfcf6e4b3f
+
+data.azurerm_resource_group.rg: Reading...
+data.azurerm_resource_group.rg: Read complete after 0s [id=/subscriptions/6b6a9c6b-f4db-4532-a846-1fcfcf6e4b3f/resourceGroups/RG-Taoufik-Mellah]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions 
+are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # azurerm_linux_function_app.func will be created
+  + resource "azurerm_linux_function_app" "func" {
+      + app_settings                                   = (known after apply)
+      + builtin_logging_enabled                        = true
+      + client_certificate_enabled                     = false
+      + client_certificate_mode                        = "Optional"
+      + content_share_force_disabled                   = false
+      + custom_domain_verification_id                  = (sensitive value)
+      + daily_memory_time_quota                        = 0
+      + default_hostname                               = (known after apply)
+      + enabled                                        = true
+      + ftp_publish_basic_authentication_enabled       = true
+      + functions_extension_version                    = "~4"
+      + hosting_environment_id                         = (known after apply)
+      + https_only                                     = false
+      + id                                             = (known after apply)
+      + key_vault_reference_identity_id                = (known after apply)
+      + kind                                           = (known after apply)
+      + location                                       = "francecentral"
+      + name                                           = "functappfaile"
+      + outbound_ip_address_list                       = (known after apply)
+      + outbound_ip_addresses                          = (known after apply)
+      + possible_outbound_ip_address_list              = (known after apply)
+      + possible_outbound_ip_addresses                 = (known after apply)
+      + public_network_access_enabled                  = true
+      + resource_group_name                            = "RG-Taoufik-Mellah"
+      + service_plan_id                                = (known after apply)
+      + site_credential                                = (sensitive value)
+      + storage_account_access_key                     = (sensitive value)
+      + storage_account_name                           = "storageover6874"
+      + storage_uses_managed_identity                  = false
+      + virtual_network_backup_restore_enabled         = false
+      + vnet_image_pull_enabled                        = false
+      + webdeploy_publish_basic_authentication_enabled = true
+      + zip_deploy_file                                = "\"../functions.zip\""
+
+      + site_config {
+          + always_on                               = (known after apply)
+          + app_scale_limit                         = (known after apply)
+          + container_registry_use_managed_identity = false
+          + default_documents                       = (known after apply)
+          + detailed_error_logging_enabled          = (known after apply)
+          + elastic_instance_minimum                = (known after apply)
+          + ftps_state                              = "Disabled"
+          + http2_enabled                           = false
+          + ip_restriction_default_action           = "Allow"
+          + linux_fx_version                        = (known after apply)
+          + load_balancing_mode                     = "LeastRequests"
+          + managed_pipeline_mode                   = "Integrated"
+          + minimum_tls_version                     = "1.2"
+          + pre_warmed_instance_count               = (known after apply)
+          + remote_debugging_enabled                = false
+          + remote_debugging_version                = (known after apply)
+          + scm_ip_restriction_default_action       = "Allow"
+          + scm_minimum_tls_version                 = "1.2"
+          + scm_type                                = (known after apply)
+          + scm_use_main_ip_restriction             = false
+          + use_32_bit_worker                       = false
+          + vnet_route_all_enabled                  = false
+          + websockets_enabled                      = false
+          + worker_count                            = (known after apply)
+
+          + application_stack {
+              + python_version              = "3.11"
+              + use_dotnet_isolated_runtime = false
+            }
+        }
+    }
+
+  # azurerm_resource_group_template_deployment.logicapp will be created
+  + resource "azurerm_resource_group_template_deployment" "logicapp" {
+      + deployment_mode     = "Incremental"
+      + id                  = (known after apply)
+      + name                = "functappfaile-logicapp-deploy"
+      + output_content      = (known after apply)
+      + parameters_content  = (sensitive value)
+      + resource_group_name = "RG-Taoufik-Mellah"
+      + template_content    = jsonencode(
+            {
+              + "$schema"      = "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
+              + contentVersion = "1.0.0.0"
+              + parameters     = {
+                  + failoverKey     = {
+                      + type = "string"
+                    }
+                  + functionBaseUrl = {
+                      + type = "string"
+                    }
+                  + healthKey       = {
+                      + type = "string"
+                    }
+                  + intervalMinutes = {
+                      + type = "int"
+                    }
+                  + location        = {
+                      + type = "string"
+                    }
+                  + logicAppName    = {
+                      + type = "string"
+                    }
+                }
+              + resources      = [
+                  + {
+                      + apiVersion = "2019-05-01"
+                      + location   = "[parameters('location')]"
+                      + name       = "[parameters('logicAppName')]"
+                      + properties = {
+                          + definition = {
+                              + "$schema"      = "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#"
+                              + actions        = {
+                                  + HealthCheck = {
+                                      + inputs = {
+                                          + method = "GET"
+                                          + uri    = "[concat(parameters('functionBaseUrl'), '/health_check?code=', parameters('healthKey'))]"
+                                        }
+                                      + type   = "Http"
+                                    }
+                                  + IfUnhealthy = {
+                                      + actions    = {
+                                          + DoFailover = {
+                                              + inputs = {
+                                                  + body    = {
+                                                      + run_id       = "@workflow().run.name"    
+                                                      + triggered_by = "logicapp"
+                                                    }
+                                                  + headers = {
+                                                      + Content-Type = "application/json"        
+                                                    }
+                                                  + method  = "POST"
+                                                  + uri     = "[concat(parameters('functionBaseUrl'), '/do_failover?code=', parameters('failoverKey'))]"
+                                                }
+                                              + type   = "Http"
+                                            }
+                                        }
+                                      + else       = {
+                                          + actions = {}
+                                        }
+                                      + expression = {
+                                          + equals = [
+                                              + "@bool(body('HealthCheck')?['healthy'])",        
+                                              + false,
+                                            ]
+                                        }
+                                      + runAfter   = {
+                                          + HealthCheck = [
+                                              + "Succeeded",
+                                            ]
+                                        }
+                                      + type       = "If"
+                                    }
+                                }
+                              + contentVersion = "1.0.0.0"
+                              + outputs        = {}
+                              + parameters     = {}
+                              + triggers       = {
+                                  + EveryInterval = {
+                                      + recurrence = {
+                                          + frequency = "Minute"
+                                          + interval  = "[parameters('intervalMinutes')]"        
+                                        }
+                                      + type       = "Recurrence"
+                                    }
+                                }
+                            }
+                          + state      = "Enabled"
+                        }
+                      + type       = "Microsoft.Logic/workflows"
+                    },
+                ]
+            }
+        )
+    }
+
+  # azurerm_service_plan.plan will be created
+  + resource "azurerm_service_plan" "plan" {
+      + id                              = (known after apply)
+      + kind                            = (known after apply)
+      + location                        = "francecentral"
+      + maximum_elastic_worker_count    = (known after apply)
+      + name                            = "functappfaile-plan"
+      + os_type                         = "Linux"
+      + per_site_scaling_enabled        = false
+      + premium_plan_auto_scale_enabled = false
+      + reserved                        = (known after apply)
+      + resource_group_name             = "RG-Taoufik-Mellah"
+      + sku_name                        = "Y1"
+      + worker_count                    = (known after apply)
+    }
+
+  # azurerm_storage_account.sa will be created
+  + resource "azurerm_storage_account" "sa" {
+      + access_tier                        = (known after apply)
+      + account_kind                       = "StorageV2"
+      + account_replication_type           = "LRS"
+      + account_tier                       = "Standard"
+      + allow_nested_items_to_be_public    = true
+      + cross_tenant_replication_enabled   = false
+      + default_to_oauth_authentication    = false
+      + dns_endpoint_type                  = "Standard"
+      + https_traffic_only_enabled         = true
+      + id                                 = (known after apply)
+      + infrastructure_encryption_enabled  = false
+      + is_hns_enabled                     = false
+      + large_file_share_enabled           = (known after apply)
+      + local_user_enabled                 = true
+      + location                           = "francecentral"
+      + min_tls_version                    = "TLS1_2"
+      + name                               = "storageover6874"
+      + nfsv3_enabled                      = false
+      + primary_access_key                 = (sensitive value)
+      + primary_blob_connection_string     = (sensitive value)
+      + primary_blob_endpoint              = (known after apply)
+      + primary_blob_host                  = (known after apply)
+      + primary_blob_internet_endpoint     = (known after apply)
+      + primary_blob_internet_host         = (known after apply)
+      + primary_blob_microsoft_endpoint    = (known after apply)
+      + primary_blob_microsoft_host        = (known after apply)
+      + primary_connection_string          = (sensitive value)
+      + primary_dfs_endpoint               = (known after apply)
+      + primary_dfs_host                   = (known after apply)
+      + primary_dfs_internet_endpoint      = (known after apply)
+      + primary_dfs_internet_host          = (known after apply)
+      + primary_dfs_microsoft_endpoint     = (known after apply)
+      + primary_dfs_microsoft_host         = (known after apply)
+      + primary_file_endpoint              = (known after apply)
+      + primary_file_host                  = (known after apply)
+      + primary_file_internet_endpoint     = (known after apply)
+      + primary_file_internet_host         = (known after apply)
+      + primary_file_microsoft_endpoint    = (known after apply)
+      + primary_file_microsoft_host        = (known after apply)
+      + primary_location                   = (known after apply)
+      + primary_queue_endpoint             = (known after apply)
+      + primary_queue_host                 = (known after apply)
+      + primary_queue_microsoft_endpoint   = (known after apply)
+      + primary_queue_microsoft_host       = (known after apply)
+      + primary_table_endpoint             = (known after apply)
+      + primary_table_host                 = (known after apply)
+      + primary_table_microsoft_endpoint   = (known after apply)
+      + primary_table_microsoft_host       = (known after apply)
+      + primary_web_endpoint               = (known after apply)
+      + primary_web_host                   = (known after apply)
+      + primary_web_internet_endpoint      = (known after apply)
+      + primary_web_internet_host          = (known after apply)
+      + primary_web_microsoft_endpoint     = (known after apply)
+      + primary_web_microsoft_host         = (known after apply)
+      + public_network_access_enabled      = true
+      + queue_encryption_key_type          = "Service"
+      + resource_group_name                = "RG-Taoufik-Mellah"
+      + secondary_access_key               = (sensitive value)
+      + secondary_blob_connection_string   = (sensitive value)
+      + secondary_blob_endpoint            = (known after apply)
+      + secondary_blob_host                = (known after apply)
+      + secondary_blob_internet_endpoint   = (known after apply)
+      + secondary_blob_internet_host       = (known after apply)
+      + secondary_blob_microsoft_endpoint  = (known after apply)
+      + secondary_blob_microsoft_host      = (known after apply)
+      + secondary_connection_string        = (sensitive value)
+      + secondary_dfs_endpoint             = (known after apply)
+      + secondary_dfs_host                 = (known after apply)
+      + secondary_dfs_internet_endpoint    = (known after apply)
+      + secondary_dfs_internet_host        = (known after apply)
+      + secondary_dfs_microsoft_endpoint   = (known after apply)
+      + secondary_dfs_microsoft_host       = (known after apply)
+      + secondary_file_endpoint            = (known after apply)
+      + secondary_file_host                = (known after apply)
+      + secondary_file_internet_endpoint   = (known after apply)
+      + secondary_file_internet_host       = (known after apply)
+      + secondary_file_microsoft_endpoint  = (known after apply)
+      + secondary_file_microsoft_host      = (known after apply)
+      + secondary_location                 = (known after apply)
+      + secondary_queue_endpoint           = (known after apply)
+      + secondary_queue_host               = (known after apply)
+      + secondary_queue_microsoft_endpoint = (known after apply)
+      + secondary_queue_microsoft_host     = (known after apply)
+      + secondary_table_endpoint           = (known after apply)
+      + secondary_table_host               = (known after apply)
+      + secondary_table_microsoft_endpoint = (known after apply)
+      + secondary_table_microsoft_host     = (known after apply)
+      + secondary_web_endpoint             = (known after apply)
+      + secondary_web_host                 = (known after apply)
+      + secondary_web_internet_endpoint    = (known after apply)
+      + secondary_web_internet_host        = (known after apply)
+      + secondary_web_microsoft_endpoint   = (known after apply)
+      + secondary_web_microsoft_host       = (known after apply)
+      + sftp_enabled                       = false
+      + shared_access_key_enabled          = true
+      + table_encryption_key_type          = "Service"
+
+      + blob_properties (known after apply)
+
+      + network_rules (known after apply)
+
+      + queue_properties (known after apply)
+
+      + routing (known after apply)
+
+      + share_properties (known after apply)
+
+      + static_website (known after apply)
+    }
+
+  # azurerm_storage_table.state will be created
+  + resource "azurerm_storage_table" "state" {
+      + id                   = (known after apply)
+      + name                 = "failoverstate"
+      + resource_manager_id  = (known after apply)
+      + storage_account_name = "storageover6874"
+    }
+
+Plan: 5 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + function_base_url  = (known after apply)
+  + logic_app_name     = "functappfaile-orchestrator"
+  + storage_table_name = "failoverstate"
+
+──────────────────────────────────────────────────────────────────────────────────────────────── 
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take     
+exactly these actions if you run "terraform apply" now.
+
+hp@DESKTOP-H93V9S0 MINGW64 ~/Documents/devoteam-mcloud/Devoteam-MCloud/azure-failover-orchestrator/infra (TEST)
+$
+
+
+
+
+

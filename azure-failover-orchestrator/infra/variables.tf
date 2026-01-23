@@ -3,14 +3,14 @@ variable "subscription_id" {
   description = "Azure subscription id used by Terraform."
 }
 
-variable "resource_group_name" {
+/* variable "resource_group_name" {
   type = string
-}
+} */
 
-variable "location" {
+/* variable "location" {
   type    = string
   default = "westeurope"
-}
+} */
 
 variable "storage_account_name" {
   type        = string
@@ -42,7 +42,9 @@ variable "logicapp_interval_minutes" {
 variable "functions_zip_path" {
   type        = string
   description = "Path to functions.zip created from ./functions folder (e.g. ../functions.zip)"
-}
+  default = "C:/Users/hp/Documents/devoteam-mcloud/Devoteam-MCloud/azure-failover-orchestrator/infra/functions.zip"
+
+  }
 
 variable "health_function_key" {
   type        = string
