@@ -1,2 +1,41 @@
 le test a été effectué tout d'abord sur la fonction health_check
 
+HTTP response code 200 OK
+
+HTTP response content
+{"healthy": false, "active_target": "secondary", "checked_endpoint": "https://secondary.example.com/health", "reason": "error:ConnectionError"}
+
+
+2026-01-27T10:51:15   [Information]   health_check: active_target=secondary healthy=False reason=error:ConnectionError
+2026-01-27T10:51:15   [Information]   Executed 'Functions.health_check' (Succeeded, Id=3ed2cd45-5898-47b5-9281-2986002cac23, Duration=136ms)
+
+
+==================================
+le changement a été effectué en executant la fonction do_failover
+
+Output
+HTTP response code 200 OK
+
+HTTP response content
+
+{"changed": false, "status": "FAILOVER_SKIPPED", "reason": "cooldown_active", "lock_until_utc": "2026-01-27T10:52:22Z"}
+
+2026-01-27T10:42:31   [Warning]   do_failover: cooldown_active until=2026-01-27T10:52:22Z
+2026-01-27T10:42:31   [Information]   Executed 'Functions.do_failover' (Succeeded, Id=c0c0fb9d-9bad-4b6e-a181-0864b3c61e8f, Duration=52ms)
+
+===========================
+Sur le Storage account , on remarque l'update :
+
+
+failover
+state
+2026-01-27T10:51:14.8623759Z
+secondary
+1
+2026-01-27T10:51:14Z
+error:ConnectionError
+ERROR
+2026-01-27T10:52:22Z
+https://primary.example.com/health
+https://secondary.example.com/health
+
