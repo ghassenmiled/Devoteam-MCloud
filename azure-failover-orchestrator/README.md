@@ -210,10 +210,6 @@ Linux/macOS:
 ```bash
 ./scripts/package_functions.sh
 ```
-Windows PowerShell:
-```powershell
-Compress-Archive -Path .\functions\* -DestinationPath .\functions.zip -Force
-```
 
 You should now have:
 - `functions.zip` at repo root
@@ -274,27 +270,9 @@ terraform apply
 Now the Logic App calls the Functions securely using function keys.
 
 ### 7) Create the initial Table entity (state row)
-Terraform creates the **table**, but not the **single entity** row. Create it once.
 
-Option A — Azure Portal (Storage Browser):
-- Storage Account → Storage browser → Tables → `failoverstate` → Add entity
-  - PartitionKey: `failover`
-  - RowKey: `state`
-  - Add properties:
-    - active_target = primary
-    - primary_endpoint = your primary endpoint
-    - secondary_endpoint = your secondary endpoint
-    - last_status = OK
-    - last_reason = init
-    - last_check_utc = 2026-01-01T00:00:00Z
-    - failover_count = 0 (Int32)
-    - lock_until_utc = ""
+ - Trigger init lambda from azure console 
 
-Option B — Azure CLI script:
-```bash
-cd ..
-./scripts/init_state_entity.sh "<RESOURCE_GROUP>" "<STORAGE_ACCOUNT_NAME>" "<PRIMARY_ENDPOINT>" "<SECONDARY_ENDPOINT>"
-```
 
 ### 8) Verify the orchestrator runs
 - Logic App → **Runs history**
@@ -307,49 +285,11 @@ Then follow the **End-to-end test** section above.
 
 ## Destroy everything (cleanup)
 
-When your demo is finished, clean up all resources to avoid costs.
-
 ### Terraform destroy
 ```bash
 cd infra
 terraform destroy
 ```
-
-### Optional: confirm Resource Group deletion
-If you want to ensure nothing remains:
-```bash
-az group show --name "<RESOURCE_GROUP_NAME>" -o table
-```
-
-If the group still exists (rare, depends on policies), you can delete it manually:
-```bash
-az group delete --name "<RESOURCE_GROUP_NAME>" --yes --no-wait
-```
-
-> Note: If your company policies prevent deleting the Resource Group, ask an owner/admin or use a dedicated demo subscription.
-
----
-
-## Logging (no Application Insights required)
-
-If Application Insights is not allowed:
-
-- **Function App → Log stream** (live)
-- **Function → Code + Test → Logs**
-- **Kudu → LogFiles**
-  - `/LogFiles/Application/Functions/`
-
-This is sufficient for demos and troubleshooting.
-
----
-
-## Why this design works well for demos
-
-- Minimal Azure resources
-- No hidden magic
-- All decisions visible in Table Storage
-- Easy AWS → Azure comparison
-- Easy to extend later (Key Vault, Managed Identity, alerts)
 
 ---
 
