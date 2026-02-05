@@ -20,12 +20,6 @@
         "definition": {
           "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
           "contentVersion": "1.0.0.0",
-          "parameters": {
-            "$connections": {
-              "type": "Object",
-              "defaultValue": {}
-            }
-          },
           "triggers": {
             "EveryInterval": {
               "type": "Recurrence",
@@ -36,110 +30,43 @@
             }
           },
           "actions": {
-            "Init_isHealthy": {
-              "type": "InitializeVariable",
-              "inputs": {
-                "variables": [
-                  {
-                    "name": "isHealthy",
-                    "type": "boolean",
-                    "value": false
-                  }
-                ]
-              }
-            },
             "HealthCheck": {
               "type": "Http",
-              "runAfter": {
-                "Init_isHealthy": ["Succeeded"]
-              },
               "inputs": {
                 "method": "GET",
                 "uri": "[concat(parameters('functionBaseUrl'), '/health_check?code=', parameters('healthKey'))]",
-                "timeout": "PT10S",
-                "retryPolicy": {
-                  "type": "fixed",
-                  "count": 2,
-                  "interval": "PT5S"
-                }
-              }
-            },
-            "Set_isHealthy_on_success": {
-              "type": "SetVariable",
-              "runAfter": {
-                "HealthCheck": ["Succeeded"]
-              },
-              "inputs": {
-                "name": "isHealthy",
-                "value": "@bool(coalesce(body('HealthCheck')?['healthy'], false))"
-              }
-            },
-            "Set_isHealthy_on_failure": {
-              "type": "SetVariable",
-              "runAfter": {
-                "HealthCheck": ["Failed", "TimedOut"]
-              },
-              "inputs": {
-                "name": "isHealthy",
-                "value": false
+                "timeout": "PT10S"
               }
             },
             "IfUnhealthy": {
               "type": "If",
               "runAfter": {
-                "Set_isHealthy_on_success": ["Succeeded"],
-                "Set_isHealthy_on_failure": ["Succeeded"]
+                "HealthCheck": ["Succeeded", "Failed", "TimedOut"]
               },
               "expression": {
-                "equals": ["@variables('isHealthy')", false]
+                "equals": [
+                  "@bool(coalesce(body('HealthCheck')?['healthy'], false))",
+                  false
+                ]
               },
               "actions": {
-                "Compose_Unhealthy": {
-                  "type": "Compose",
-                  "inputs": "@concat('Unhealthy detected. active_target=', string(body('HealthCheck')?['active_target']), ' reason=', string(body('HealthCheck')?['reason']))"
-                },
                 "DoFailover": {
                   "type": "Http",
-                  "runAfter": {
-                    "Compose_Unhealthy": ["Succeeded"]
-                  },
                   "inputs": {
                     "method": "POST",
                     "uri": "[concat(parameters('functionBaseUrl'), '/do_failover?code=', parameters('failoverKey'))]",
                     "headers": { "Content-Type": "application/json" },
-                    "timeout": "PT10S",
-                    "retryPolicy": {
-                      "type": "fixed",
-                      "count": 2,
-                      "interval": "PT5S"
-                    },
                     "body": {
                       "triggered_by": "logicapp",
                       "run_id": "@workflow().run.name"
                     }
                   }
-                },
-                "Terminate_After_Failover": {
-                  "type": "Terminate",
-                  "runAfter": {
-                    "DoFailover": ["Succeeded", "Failed", "TimedOut"]
-                  },
-                  "inputs": {
-                    "runStatus": "Succeeded"
-                  }
                 }
               },
               "else": {
                 "actions": {
-                  "Compose_Healthy": {
-                    "type": "Compose",
-                    "inputs": "@concat('Healthy. No action. active_target=', string(body('HealthCheck')?['active_target']), ' checked=', string(body('HealthCheck')?['checked_endpoint']), ' reason=', string(body('HealthCheck')?['reason']))"
-                  },
-                  "Terminate_Healthy": {
+                  "Stop": {
                     "type": "Terminate",
-                    "runAfter": {
-                      "Compose_Healthy": ["Succeeded"]
-                    },
                     "inputs": {
                       "runStatus": "Succeeded"
                     }
@@ -149,11 +76,6 @@
             }
           },
           "outputs": {}
-        },
-        "parameters": {
-          "$connections": {
-            "value": {}
-          }
         }
       }
     }
