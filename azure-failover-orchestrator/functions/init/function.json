@@ -6,7 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["get"],
-      "route": "health_check"
+      "route": "init"
     },
     {
       "type": "http",
