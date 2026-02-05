@@ -21,11 +21,6 @@ A **deterministic failover loop**:
 3. Store all decisions in **one Table Storage entity**
 4. Enforce a **cooldown** to avoid infinite failover loops
 
-This makes the logic:
-- Easy to reason about
-- Easy to debug
-- Easy to explain to a team
-
 ---
 
 ## Architecture (simplified)
