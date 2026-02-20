@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "logicAppName": { "type": "string" },
+    "location": { "type": "string" },
+
+    "functionBaseUrl": { "type": "string" },
+    "healthKey": { "type": "securestring" },
+    "failoverKey": { "type": "securestring" },
+
+    "intervalMinutes": { "type": "int", "defaultValue": 5 }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[parameters('logicAppName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "triggers": {
+            "Every_X_Minutes": {
+              "type": "Recurrence",
+              "recurrence": {
+                "frequency": "Minute",
+                "interval": "[parameters('intervalMinutes')]"
+              }
+            }
+          },
+          "actions": {
+            "HealthCheck": {
+              "type": "Http",
+              "inputs": {
+                "method": "GET",
+                "uri": "[concat(parameters('functionBaseUrl'), '/health_check?code=', parameters('healthKey'))]"
+              },
+              "runAfter": {}
+            },
+            "If_Unhealthy_Then_Failover": {
+              "type": "If",
+              "expression": {
+                "equals": [
+                  "@body('HealthCheck')?['healthy']",
+                  false
+                ]
+              },
+              "actions": {
+                "DoFailover": {
+                  "type": "Http",
+                  "inputs": {
+                    "method": "POST",
+                    "uri": "[concat(parameters('functionBaseUrl'), '/do_failover?code=', parameters('failoverKey'))]"
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "HealthCheck": [ "Succeeded" ]
+              }
+            }
+          },
+          "outputs": {}
+        }
+      }
+    }
+  ]
+}
