@@ -18,7 +18,7 @@ def utc_now_iso():
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("do_failover: start")
 
-    cooldown_minutes = int(os.environ.get("COOLDOWN_MINUTES", "10"))
+    cooldown_minutes = int(os.environ.get("COOLDOWN_MINUTES", "0"))
 
     table = TableServiceClient.from_connection_string(
         os.environ["AzureWebJobsStorage"]

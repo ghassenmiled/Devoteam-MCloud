@@ -20,5 +20,5 @@ health_function_key  = "REPLACE_ME"
 failover_function_key= "REPLACE_ME"
 
 # === Optional ===
-cooldown_minutes     = 10
+cooldown_minutes     = 0
 logicapp_interval_minutes = 1
